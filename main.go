@@ -2,20 +2,20 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
+	"net/http"
 
 	//"html"
 	"log"
 	"os"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/template/html"
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
+var DB *sql.DB
 
-func main() {
+func connectDatabase(){
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatalf("Error loading .env file")
@@ -32,104 +32,59 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
-	engine := html.New("./views", ".html")
+	//defer db.Close()
+	DB = db
+}
 
-	app := fiber.New(fiber.Config{
-		Views: engine,
-	})
-	app.Get("/", func(c *fiber.Ctx) error {
-		return indexHandler(c,db)
-	})
-	app.Get("/all", func(c *fiber.Ctx) error {
-		return getAll(c,db)
-	})
-	app.Post("/add", func(c *fiber.Ctx) error {
-		return postHandler(c, db)
-	})
-
-	app.Put("/update", func(c *fiber.Ctx) error {
-		return putHandler(c, db)
-	})
-
-	app.Delete("/delete", func(c *fiber.Ctx) error {
-		return deleteHandler(c, db)
-	})
+func main() {
 	
+
+	router := gin.Default()
+	connectDatabase()
+	router.LoadHTMLFiles("views/index.html")
    port := os.Getenv("PORT")
-   if port == "" {
-       port = "8000"
-   }
-  
-   log.Fatalln(app.Listen(fmt.Sprintf(":%v", port)))
-}
-
-func indexHandler(c *fiber.Ctx, db *sql.DB) error {
-	
-	var res string
-	var tasks []string
-
-	rows, err := db.Query("select * from tb_task")
-	
-	if err != nil {
-		log.Fatalln(err)
-		c.JSON("Terjadi kesalahan")
-	}
-
-	for rows.Next() {
-		rows.Scan(&res)
-		tasks = append(tasks, res)
-	}
-	return c.Render("index", fiber.Map{
-		"Tasks":tasks,
+   router.GET("/",func(ctx *gin.Context) {
+	   ctx.HTML(http.StatusOK, "index.html", gin.H{
+		   "title":"Task App",
+		})
 	})
+
+	router.POST("/add",postHandler)
+	router.POST("/tambah", func(ctx *gin.Context) {
+		ctx.JSON(http.StatusCreated, gin.H{
+			"hsil":"ok",
+			"pesan":"Berhasil",
+		})
+	})
+
 	
+	if port == "" {
+		port = "8000"
+	}
+   router.Run(":"+port)
+   
+}
+type Task struct {
+	Nama string `json:"nama"`
+	Isi string `json:"isi"`
+	Tanggal string `json:"tanggal"`
 }
 
-func getAll(c *fiber.Ctx, db *sql.DB) error {
-
-	return c.JSON("data")
-}
-type newtask struct {
-	nama string;
-	isi string;
-	tanggal string;
-}
-func postHandler(c *fiber.Ctx, db *sql.DB) error {
-	task := newtask{}
-	type setatus struct {
-		success bool;
-		pesan string;
+func postHandler(ctx *gin.Context) {
+	var newTask Task
+	if err := ctx.BindJSON(&newTask); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message" : err.Error(),
+		})
+		return
 	}
 	
-	hasil := setatus{
-		success: false,
-		pesan: "Error",
-	}
-	if err := c.BodyParser(&task); err != nil {
-		log.Printf("An error occured: %v", err)
-		return c.JSON(err.Error())
-	}
-	if task.isi != "" {
-		_, err := db.Exec("INSERT into tb_task VALUES ($1,$2,$3)", task.nama, task.isi, task.tanggal)
+	if newTask.Isi != "" {
+		_, err := DB.Exec("INSERT into tb_task (name, isi, tanggal) VALUES ($1,$2,$3)", newTask.Nama,newTask.Isi, newTask.Tanggal)
 		if err != nil {
 			log.Fatalf("An error occured while executing query: %v", err)
 		}
-		
-		hasil = setatus{
-			success: true,
-			pesan: "Insert success",
-		}
-
 	}
-	
-	return c.JSON(hasil)
- }
-
- func putHandler(c *fiber.Ctx, db *sql.DB) error {
-	return c.SendString("Hello")
- }
-
- func deleteHandler(c *fiber.Ctx, db *sql.DB) error {
-	return c.SendString("Hello")
- }
+	ctx.JSON(http.StatusCreated,gin.H{"success":true, "pesan": "berhasil"})
+}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 
 	//"html"
@@ -50,12 +51,7 @@ func main() {
 	})
 
 	router.POST("/add",postHandler)
-	router.POST("/tambah", func(ctx *gin.Context) {
-		ctx.JSON(http.StatusCreated, gin.H{
-			"hsil":"ok",
-			"pesan":"Berhasil",
-		})
-	})
+	router.GET("/all",getAll)
 
 	
 	if port == "" {
@@ -65,6 +61,7 @@ func main() {
    
 }
 type Task struct {
+	ID int `json:"id"`
 	Nama string `json:"nama"`
 	Isi string `json:"isi"`
 	Tanggal string `json:"tanggal"`
@@ -87,4 +84,30 @@ func postHandler(ctx *gin.Context) {
 		}
 	}
 	ctx.JSON(http.StatusCreated,gin.H{"success":true, "pesan": "berhasil"})
+}
+
+func getAll(ctx *gin.Context){
+	
+	var tasks []Task
+	var val Task
+	rows, err := DB.Query("select * from tb_task")
+	
+	if err != nil {
+		log.Fatalln(err)
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"success":false,
+			"message":err,
+		})
+	}
+	defer rows.Close()
+	for rows.Next() {
+		rows.Scan(&val.ID,&val.Nama,&val.Isi,&val.Tanggal)
+		tasks = append(tasks, val)
+		fmt.Println(val)
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success" : true,
+		"data" : tasks,
+	})
 }

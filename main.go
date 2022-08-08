@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
 
 	//"html"
@@ -47,6 +46,7 @@ func main() {
    router.GET("/",func(ctx *gin.Context) {
 	   ctx.HTML(http.StatusOK, "index.html", gin.H{
 		   "title":"Task App",
+		   "baseurl":ctx.Request.URL.Path,
 		})
 	})
 
@@ -103,7 +103,7 @@ func getAll(ctx *gin.Context){
 	for rows.Next() {
 		rows.Scan(&val.ID,&val.Nama,&val.Isi,&val.Tanggal)
 		tasks = append(tasks, val)
-		fmt.Println(val)
+		
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{

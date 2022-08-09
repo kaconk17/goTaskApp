@@ -43,7 +43,7 @@ func main() {
 	router := gin.Default()
 	connectDatabase()
 	router.LoadHTMLFiles("views/index.html")
-   port := os.Getenv("PORT")
+   //port := os.Getenv("PORT")
    router.GET("/",func(ctx *gin.Context) {
 	
 	   ctx.HTML(http.StatusOK, "index.html", gin.H{
@@ -57,11 +57,12 @@ func main() {
 	router.DELETE("/delete/:id",delTask)
 	router.PUT("/edit",editTask)
 	router.PUT("/done/:id",doneTask)
-	
+	/*
 	if port == "" {
 		port = "8000"
 	}
-   router.Run(":"+port)
+	*/
+   router.Run()
    
 }
 type Task struct {

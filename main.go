@@ -9,17 +9,18 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
 var DB *sql.DB
 
 func connectDatabase(){
+	/*
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatalf("Error loading .env file")
 	  }
+	*/
 	host := os.Getenv("HOST")
 	dbPort := os.Getenv("DB_PORT")
 	database := os.Getenv("DATABASE")
@@ -27,7 +28,7 @@ func connectDatabase(){
 	dbpass := os.Getenv("DB_PASSWORD")
 
 	
-	connStr := "postgresql://"+dbuser+":"+dbpass+"@"+host+":"+dbPort+"/"+database+"?sslmode=disable"
+	connStr := "postgresql://"+dbuser+":"+dbpass+"@"+host+":"+dbPort+"/"+database+"?sslmode=require"
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)

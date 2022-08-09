@@ -7,7 +7,7 @@
     <title>{{.title}}</title>
    <style>
     .top-wrapper {
-    padding: 80px 0 100px 0;
+    padding: 60px 0 70px 0;
     
     background-size: cover;
     color: black;
@@ -16,6 +16,7 @@
    </style>
     <!-- Bootsrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" />
 </head>
 <body>
     <div class="container">
@@ -43,6 +44,7 @@
                         <th>Nama</th>
                         <th>Task</th>
                         <th>Deadline</th>
+                        <th>Done</th>
                         <th>Action</th>
                     </thead>
                     <tbody>
@@ -86,19 +88,63 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="submit" class="btn btn-primary" id="simpan">Save changes</button>
+                    
                 </form>
         </div>
       </div>
     </div>
   </div>
-    </div>
+</div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editModalLabel">Edit Task</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <form class="row g-3" id="frm_edit">
+              
+                    <div class="col-md-12">
+                        <input type="hidden" id="edit_id">
+                        <label for="" class="form-label">Task</label>
+                        <input type="text" id="edit_isi" class="form-control" required>
+                    </div>
+               
+             
+                    <div class="col-md-4">
+
+                        <label for="" class="form-label">Asign to</label>
+                        <input type="text" id="edit_nama" class="form-control" required>
+                    </div>
+               
+                    <div class="col-md-4">
+
+                        <label for="" class="form-label">Deadline</label>
+                        <input type="date" id="edit_tanggal" class="form-control">
+                    </div>
+               
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary" id="simpan">Save changes</button>
+                    
+                </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous"></script>
 <script type="text/javascript">
 $(document).ready(function(){
-    var base_url = $("#base").attr("href");
-    getAlldata();
+    var base_url = window.location;
+    var proto = base_url.protocol;
+    var host = base_url.host;
+    getAlldata(proto,host);
     $("#frm_new").submit(function(e){
         e.preventDefault();
         var isi = $("#isi").val();
@@ -106,30 +152,108 @@ $(document).ready(function(){
         var tanggal = $("#tanggal").val();
 
         $.ajax({
-            url:'/add',
+            url:proto+'//'+host+'/add',
             type: 'POST',
             dataType: 'json',
-            data: JSON.stringify({"id":1,"nama":nama,"isi" : isi,"tanggal": tanggal,}),
+            data: JSON.stringify({"id":1,"nama":nama,"isi" : isi,"tanggal": tanggal,"task_status":"ON",}),
         }).done(function(resp){
             if(resp.success){
-                alert('berhasil');
+               
                 $("#exampleModal").modal("toggle");
-                getAlldata();
+                getAlldata(proto,host);
+            }
+        })
+    })
+
+    $("#tb_task").on('click','.btn-danger', function(){
+        var currentRow = $(this).closest("tr");
+        var cellval = currentRow.find("td:eq(0)").html();
+
+        var r = confirm("Apakah akan menghapus task No. "+ cellval + " ?");
+        if (r) {
+            
+            $.ajax({
+                url:proto+'//'+host+'/delete/'+cellval,
+                type: 'DELETE',
+                dataType: 'json',
+               
+            }).done(function(resp){
+                if (resp.success) {
+                    getAlldata(proto,host);
+                }
+            });
+        }
+    });
+
+    $("#tb_task").on("click",".btn-success",function(){
+        var currentRow = $(this).closest("tr");
+        var cellval = currentRow.find("td:eq(0)").html();
+        $.ajax({
+                url:proto+'//'+host+'/done/'+cellval,
+                type: 'PUT',
+                dataType: 'json',
+               
+            }).done(function(resp){
+                if (resp.success) {
+                    getAlldata(proto,host);
+                }
+            });
+    });
+
+    $("#tb_task").on("click",".btn-outline-primary", function(){
+        var currentRow = $(this).closest("tr");
+        var id = currentRow.find("td:eq(0)").html();
+        var nama = currentRow.find("td:eq(1)").html();
+        var isi = currentRow.find("td:eq(2)").html();
+        var tanggal = currentRow.find("td:eq(3)").html();
+        $("#edit_nama").val(nama);
+        $("#edit_isi").val(isi);
+        $("#edit_tanggal").val(tanggal.split('T')[0]);
+        $("#edit_id").val(id);
+        $("#editModal").modal("toggle");
+    });
+
+    $("#frm_edit").submit(function(e){
+        e.preventDefault();
+        var isi = $("#edit_isi").val();
+        var nama = $("#edit_nama").val();
+        var tanggal = $("#edit_tanggal").val();
+        var id = $("#edit_id").val();
+        id = parseInt(id);
+        $.ajax({
+            url:proto+'//'+host+'/edit',
+            type: 'PUT',
+            dataType: 'json',
+            data: JSON.stringify({"id":id,"nama":nama,"isi" : isi,"tanggal": tanggal,"task_status":"ON",}),
+        }).done(function(resp){
+            if(resp.success){
+               
+                $("#editModal").modal("toggle");
+                getAlldata(proto,host);
             }
         })
     })
 });
 
-function getAlldata(){
+function getAlldata(proto,host){
   $.ajax({
-    url:'/all',
+    url:proto+'//'+host+'/all',
     type: 'GET',
     dataType: 'json',
   }).done(function(resp){
     if (resp.success){
         $("#tb_task tbody").empty();
+        var done ='';
+        var kelas = '';
         for (var i in resp.data){
-            var newrow = '<tr><td>'+resp.data[i].id+'</td><td>'+resp.data[i].nama+'</td><td>'+resp.data[i].isi+'</td><td>'+resp.data[i].tanggal+'</td><td>act</td></tr>';
+            if (resp.data[i].task_status == 'DONE') {
+                done = resp.data[i].task_status;
+                kelas = 'table-success';
+            }else{
+                done ='<button class="btn btn-success"><span class="material-symbols-outlined">done</span></button>';
+                kelas='';
+            }
+            var newrow = '<tr class="'+kelas+'"><td>'+resp.data[i].id+'</td><td>'+resp.data[i].nama+'</td><td>'+resp.data[i].isi+'</td><td>'+resp.data[i].tanggal.split('T')[0]+'</td><td>'+done+'</td><td><button class="btn btn-outline-primary btn-sm"><span class="material-symbols-outlined">edit</span></button><button class="btn btn-danger btn-sm"><span class="material-symbols-outlined">delete</span></button></td></tr>';
             $("#tb_task tbody").append(newrow);
         }
     }

@@ -6,12 +6,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.title}}</title>
    <style>
+    body {
+        background-image: url("bg.jpg");
+        background-size: cover;
+    }
     .top-wrapper {
     padding: 60px 0 70px 0;
     
     background-size: cover;
     color: black;
     text-align: center;
+   
+    
+    }
+    footer {
+        margin-top: 20px;
+        font-size: 12px;
+        height: 70px;
+        background-color:aquamarine;
+        text-align: end;
+    }
+    footer p {
+        padding-top: 30px;
+        padding-right: 10px;
     }
    </style>
     <!-- Bootsrap -->
@@ -20,9 +37,11 @@
 </head>
 <body>
     <div class="container">
-        <nav class="navbar bg-success bg-opacity-25">
+        <nav class="navbar bg-primary bg-opacity-25">
             <div class="container-fluid">
-              <a class="navbar-brand" id="base" href="{{.baseurl}}">taskApp</a>
+              <a class="navbar-brand" id="base" href="{{.baseurl}}"><span class="material-symbols-outlined" style="font-size:30px;">
+                app_registration
+                </span> taskApp</a>
             </div>
         </nav>
         <div class="top-wrapper">
@@ -33,8 +52,15 @@
         
         <div class="card">
             <div class="card-header">
-              
-                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal">New task</button>
+              <div class="row g-3">
+                <div class="col-auto">
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal"><span class="material-symbols-outlined">add</span></button>
+                </div>
+                <div class="col-auto">
+                    <input type="text" readonly class="form-control-plaintext" value="Tambah Task">
+                </div>
+              </div>
+                    
       
             </div>
             <div class="card-body">
@@ -47,13 +73,17 @@
                         <th>Done</th>
                         <th>Action</th>
                     </thead>
-                    <tbody>
+                    <tbody style="height: 300px; overflow-y: auto;">
                         
                     </tbody>
                 </table>
             </div>
         </div>
-        
+    </body>
+    <footer>
+       
+        <p> <a href="https://github.com/kaconk17">Hartono</a> &copy; 2022</p>
+    </footer>
           <!-- Modal -->
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
